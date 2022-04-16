@@ -216,17 +216,6 @@ def handle_layout(conn, comport):
                     elif prot == 'DCC':
                         address = int(f'0xC{(3-len(add))*"0"}{add}', base=16)
                         print(f'> [CMD] Translated DCC address {temp} to 0xC{(3-len(add))*"0"}{add}')
-
-                # For MFX locos:
-                # if '999' in str(address):
-                #     print('MFX loco')
-                #     address = int(f'0x400{str(address).split("999")[1]}', base=16)  # adress len 2 wont work
-                # elif '00' in str(address):
-                #     print('DCC loco')
-                #     # TODO: for mfx and dcc locos fix leading zeros for addreses of length 2 and 1
-                #     address = int(f'0xC0{str(address).split("00")[0]}', base=16)  # adress len 1 wont work
-                #     print(address)
-
                 if address not in tracks.loco_list:
                     tracks.loco_list[address] = Loco(address)
                 if tracks.loco_list[address].direction != direction:
@@ -249,14 +238,6 @@ def handle_layout(conn, comport):
                     elif prot == 'DCC':
                         address = int(f'0xC{(3-len(add))*"0"}{add}', base=16)
                         print(f'> [CMD] Translated DCC address {temp} to 0xC{(3-len(add))*"0"}{add}')
-
-                # if '999' in str(address):
-                #     print('MFX loco')
-                #     address = int(f'0x400{str(address).split("999")[1]}', base=16)
-                # elif '00' in str(address):
-                #     print('DCC loco', address)
-                #     address = int(f'0xC0{str(address).split("00")[0]}', base=16)  # adress len 1 wont work
-
                 if address not in tracks.loco_list:
                     tracks.loco_list[address] = Loco(address)
                 for func in funcs_on:
@@ -655,13 +636,3 @@ if __name__ == '__main__':
     for p in ui.ps:
         p.terminate()
         p.join()
-
-    # p = Process(target=handle_layout, args=(child_conn_track,))
-    # p.start()
-
-    # p = Process(target=handle_sensors, args=(sensor_q,))
-    # p.start()
-
-    # TODO: add Tkinter gui for easy setting of new switches, swich control should go through python not arduino
-    # TODO: best is separate arduino / Process for handling detections as this is an externaly generated update
-    # TODO: add monitoring to tkinter gui
