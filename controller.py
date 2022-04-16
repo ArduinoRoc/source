@@ -168,7 +168,7 @@ def handle_sensors(sensor_q, comport):
     try:
         ser = serial.Serial(comport, timeout=0.5, baudrate=115200)  # open serial port
     except Exception:
-        print(f'> [Arduino] Could not sensor to turnout Arduino on {comport}.')
+        print(f'> [Arduino] Could not connect to sensor Arduino on {comport}.')
         return
     n_sensors = 19
     sensors = [Sensor(i + 1) for i in range(n_sensors)]
