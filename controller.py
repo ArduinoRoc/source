@@ -204,7 +204,7 @@ def handle_layout(conn, comport):
                 result = tracks.send_command('setPower(0)')
             elif data['cmd'] == 'loc_change':
                 address, speed, direction = data['data'].values()
-                with open('C:/Users/tom/Desktop/controller/binds.txt') as f:
+                with open('binds.txt') as f:
                     binds = {i.split(':')[1].split('=>')[1]: [i.split(':')[0], i.split(':')[1].split('=>')[0]] for i in
                              f.read().split('\n') if i != ''}
                 if address in binds:
@@ -226,7 +226,7 @@ def handle_layout(conn, comport):
                     result = tracks.send_command(f'setLocoSpeed({address},{8 * int(speed)})')
             elif data['cmd'] == 'loc_func':
                 address, funcs_on = data['data'].values()
-                with open('C:/Users/tom/Desktop/controller/binds.txt') as f:
+                with open('binds.txt') as f:
                     binds = {i.split(':')[1].split('=>')[1]: [i.split(':')[0], i.split(':')[1].split('=>')[0]] for i in
                              f.read().split('\n') if i != ''}
                 if address in binds:
@@ -255,18 +255,18 @@ def handle_layout(conn, comport):
 class Turnout:
     def __init__(self, id):
         self.id = id
-        with open(f'C:/Users/tom/Desktop/controller/config_files/s{id}.config') as f:
+        with open(f'/config_files/s{id}.config') as f:
             self.stats = {i.split('=')[0]: i.split('=')[1] for i in f.read().split('\n')}
         self.state = int(self.stats['state'])
 
     def update_stats(self, key, value):
         self.stats[key] = value
         lines = '\n'.join([f'{key}={self.stats[key]}' for key in self.stats])
-        with open(f'C:/Users/tom/Desktop/controller/config_files/s{self.id}.config', 'w') as f:
+        with open(f'/config_files/s{self.id}.config', 'w') as f:
             f.write(lines)
 
     def throw(self, new_pos):
-        with open(f'C:/Users/tom/Desktop/controller/config_files/s{self.id}.config') as f:
+        with open(f'/config_files/s{self.id}.config') as f:
             self.stats = {i.split('=')[0]: i.split('=')[1] for i in f.read().split('\n')}
         if new_pos == 0:
             if self.state == 90:
@@ -301,7 +301,7 @@ def handle_turnouts(turnout_q, comport):
         print(f'> [Arduino] Could not connect to turnout Arduino on {comport}.')
         return
     step = 10
-    files = [i.split('s')[1].split('.')[0] for i in os.listdir('C:/Users/tom/Desktop/controller/config_files') if
+    files = [i.split('s')[1].split('.')[0] for i in os.listdir('/config_files') if
              's' in i]
     turnouts = {}
     for id in files:
@@ -337,7 +337,7 @@ def handle_turnouts(turnout_q, comport):
 
             elif turnout_data['type'] == 'update':
                 files = [i.split('s')[1].split('.')[0] for i in
-                         os.listdir('C:/Users/tom/Desktop/controller/config_files') if 's' in i]
+                         os.listdir('/config_files') if 's' in i]
                 turnouts = {}
                 for id in files:
                     turnouts[int(id)] = Turnout(int(id))
@@ -366,7 +366,7 @@ def listen(comport, log):
 class UI:
     def __init__(self):
         parent_conn_track, self.child_conn_track = Pipe()
-        with open('C:/Users/tom/Desktop/controller/config.txt') as f:
+        with open('config.txt') as f:
             lines = f.read().split('\n')
             self.modules = {i: k for i, k in zip(lines[0].split(','), lines[1].split(','))}
         sensor_q = Queue() if 'sensors' in self.modules else None
@@ -439,7 +439,7 @@ class UI:
         self.frame.pack()
         self.log_out.set('>')
         self.bind_out.set('')
-        with open('C:/Users/tom/Desktop/controller/binds.txt') as f:
+        with open('binds.txt') as f:
             locos = ', '.join(f.read().split('\n'))
         lbl = Label(self.frame, text='Bound locomotives:\n' + locos, font=("Arial Bold", 12))
         lbl.grid(column=1, row=0)
@@ -511,11 +511,11 @@ class UI:
             elif not mfx and not dcc:
                 self.bind_out.set('Enter either DCC or MFX address!')
             else:
-                with open('C:/Users/tom/Desktop/controller/binds.txt') as f:
+                with open('binds.txt') as f:
                     binds = f.read().split('\n')
                 if f'{"MFX" if mfx else "DCC"}:{mfx if mfx else dcc}=>{roc}' in binds:
                     binds.remove(f'{"MFX" if mfx else "DCC"}:{mfx if mfx else dcc}=>{roc}')
-                    with open('C:/Users/tom/Desktop/controller/binds.txt', 'w') as f:
+                    with open('binds.txt', 'w') as f:
                         f.write('\n'.join(binds))
                     self.bind_out.set('Unbound loco!')
                 else:
@@ -532,7 +532,7 @@ class UI:
             elif not mfx and not dcc:
                 self.bind_out.set('Enter either DCC or MFX address!')
             else:
-                with open('C:/Users/tom/Desktop/controller/binds.txt') as f:
+                with open('binds.txt') as f:
                     binds = [i.split(':')[1].split('=>') for i in f.read().split('\n') if i != '']
                 error = False
                 for bind in binds:
@@ -543,7 +543,7 @@ class UI:
                         self.bind_out.set('Loco already in rocrail!')
                         error = True
                 if not error:
-                    with open('C:/Users/tom/Desktop/controller/binds.txt', 'a') as f:
+                    with open('binds.txt', 'a') as f:
                         f.write(f'{"MFX" if mfx else "DCC"}:{mfx if mfx else dcc}=>{roc}\n')
                         self.bind_out.set(
                             f'Bound {"MFX" if mfx else "DCC"} loco with address {mfx if mfx else dcc}.'
