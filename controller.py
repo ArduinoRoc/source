@@ -1,4 +1,4 @@
-from multiprocessing import Process, Pipe, Queue, Value
+from multiprocessing import Process, Pipe, Queue, Value, freeze_support
 from queue import Empty
 import socket
 import ctypes
@@ -165,14 +165,18 @@ class Sensor:
 
 
 def handle_sensors(sensor_q, comport):
-    try:
-        ser = serial.Serial(comport, timeout=0.5, baudrate=115200)  # open serial port
-    except Exception:
-        print(f'> [Arduino] Could not connect to sensor Arduino on {comport}.')
-        return
-    n_sensors = 19
+    with open('n_sensors.txt') as f:
+        n_sensors = int(f.read())
+    print(f'> [Sys] Using {n_sensors} number of sensors for detection.')
+    while True:
+        try:
+            ser = serial.Serial(comport, timeout=0.5, baudrate=115200)  # open serial port
+        except Exception:
+            print(f'> [Arduino] Could not connect to sensor Arduino on {comport}.')
+            time.sleep(2)
+        else:
+            break
     sensors = [Sensor(i + 1) for i in range(n_sensors)]
-    # TODO: check if this works.
     while True:
         try:
             line = ser.readline().decode().replace('\n', '').replace('\r', '').strip()
@@ -192,7 +196,7 @@ def handle_layout(conn, comport):
             print('> [Arduino] Connected to track box.')
             break
         else:
-            print('> [Arduino] Layout could not connect to track box!')
+            print('> [Arduino] Could not connect to track box!')
             time.sleep(2)
     while True:
         data = conn.recv()
@@ -211,11 +215,11 @@ def handle_layout(conn, comport):
                     temp = address
                     prot, add = binds[address]
                     if prot == 'MFX':
-                        address = int(f'0x4{(3-len(add))*"0"}{add}', base=16)
-                        print(f'> [CMD] Translated MFX address {temp} to 0x4{(3-len(add))*"0"}{add}')
+                        address = int(f'0x4{(3 - len(add)) * "0"}{add}', base=16)
+                        print(f'> [CMD] Translated MFX address {temp} to 0x4{(3 - len(add)) * "0"}{add}')
                     elif prot == 'DCC':
-                        address = int(f'0xC{(3-len(add))*"0"}{add}', base=16)
-                        print(f'> [CMD] Translated DCC address {temp} to 0xC{(3-len(add))*"0"}{add}')
+                        address = int(f'0xC{(3 - len(add)) * "0"}{add}', base=16)
+                        print(f'> [CMD] Translated DCC address {temp} to 0xC{(3 - len(add)) * "0"}{add}')
                 if address not in tracks.loco_list:
                     tracks.loco_list[address] = Loco(address)
                 if tracks.loco_list[address].direction != direction:
@@ -233,11 +237,11 @@ def handle_layout(conn, comport):
                     temp = address
                     prot, add = binds[address]
                     if prot == 'MFX':
-                        address = int(f'0x4{(3-len(add))*"0"}{add}', base=16)
-                        print(f'> [CMD] Translated MFX address {temp} to 0x4{(3-len(add))*"0"}{add}')
+                        address = int(f'0x4{(3 - len(add)) * "0"}{add}', base=16)
+                        print(f'> [CMD] Translated MFX address {temp} to 0x4{(3 - len(add)) * "0"}{add}')
                     elif prot == 'DCC':
-                        address = int(f'0xC{(3-len(add))*"0"}{add}', base=16)
-                        print(f'> [CMD] Translated DCC address {temp} to 0xC{(3-len(add))*"0"}{add}')
+                        address = int(f'0xC{(3 - len(add)) * "0"}{add}', base=16)
+                        print(f'> [CMD] Translated DCC address {temp} to 0xC{(3 - len(add)) * "0"}{add}')
                 if address not in tracks.loco_list:
                     tracks.loco_list[address] = Loco(address)
                 for func in funcs_on:
@@ -377,8 +381,10 @@ class UI:
         self.ps = [Process(target=handle_rocrail_connection, args=(parent_conn_track, sensor_q, turnout_q)),
                    Process(target=handle_layout, args=(self.child_conn_track, self.modules['rocrail']))]
         if turnout_q is not None:
+            print('> [Sys] Starting with turnout module.')
             self.ps += [Process(target=handle_turnouts, args=(turnout_q, self.modules['turnouts']))]
         if sensor_q is not None:
+            print('> [Sys] Starting with sensor module.')
             self.ps += [Process(target=handle_sensors, args=(sensor_q, self.modules['sensors']))]
         for p in self.ps:
             p.start()
@@ -630,7 +636,7 @@ class UI:
 
 
 if __name__ == '__main__':
-    # listen_layout()
+    freeze_support()
     ui = UI()
     ui.window.mainloop()
     for p in ui.ps:
