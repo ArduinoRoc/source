@@ -1,10 +1,10 @@
 int detectPins[] = {
-52, 50, 48, 46, 44, 42, 40, 38, 36, 25, 32, 30, 28, 26, 24, 22, 53, 51, 23};
-int sensorCount = 19; 
+52, 50, 48, 46, 44, 42, 40, 38, 36, 25, 32, 30, 28, 26, 24, 22, 53, 51, 23, 47, 39, 49, 45};
+int sensorCount = 23;
 
 void setup() {
   for (int Pin = 0; Pin < sensorCount; Pin++) {
-    pinMode(detectPins[Pin], INPUT); 
+    pinMode(detectPins[Pin], INPUT);
   }
   Serial.begin(115200);
 }
