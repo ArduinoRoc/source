@@ -45,8 +45,7 @@ def handle_command(data, track_conn, turnout_q):
         switch = data[1]
         pos = data[2]
         print(f'> [CMD] Switch {switch} set to {pos}.')
-        if turnout_q is not None:
-            turnout_q.put({'type': 'set', 'data': {switch: pos}})
+        track_conn.send({'cmd': 'switch_set', 'data': {'address': switch, 'pos': pos}})
     elif data[0] == 'c':
         pass
     elif data[0] == 'f':
@@ -228,6 +227,10 @@ def handle_layout(conn, comport):
                 if tracks.loco_list[address].speed != speed:
                     tracks.loco_list[address].speed = speed
                     result = tracks.send_command(f'setLocoSpeed({address},{8 * int(speed)})')
+            elif data['cmd'] == 'switch_set':
+                address, pos = data['data'].values()
+                tracks.send_command('setTurnout(%s,%s)' % (12287 + int(address), pos))
+                print(f'> [CMD] Set turnout {12287 + int(address)} to {pos}.')
             elif data['cmd'] == 'loc_func':
                 address, funcs_on = data['data'].values()
                 with open('binds.txt') as f:
